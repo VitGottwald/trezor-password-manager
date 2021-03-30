@@ -97,11 +97,14 @@ var React = require('react'),
     },
 
     showImportModal() {
-      this.setState({
-        showImportModal: true
-      }, () => {
-        this.resetDropdownOptions();
-      });
+      this.setState(
+        {
+          showImportModal: true
+        },
+        () => {
+          this.resetDropdownOptions();
+        }
+      );
     },
 
     closeImportModal() {
@@ -115,7 +118,7 @@ var React = require('react'),
 
     stopImportProcess() {
       if (this.state.importedTags.length > 0) {
-        this.state.importedTags.map((tagId) => {
+        this.state.importedTags.map(tagId => {
           window.myStore.removeTag(tagId, false);
         });
       }
@@ -188,9 +191,9 @@ var React = require('react'),
           } else {
             let newId = window.myStore.addNewTag(key, 'cloud');
             tags.push(newId);
-            
+
             let importedTags = this.state.importedTags;
-                importedTags.push(newId);
+            importedTags.push(newId);
             this.setState({
               importedTags: importedTags
             });
@@ -211,17 +214,17 @@ var React = require('react'),
           note: String(entry.note) || null,
           key_value: this.state.key_value
         };
-        
+
         if (!data.note) {
           if (this.isUrl(this.removeProtocolPrefix(entry.title))) {
-            data.note = tld.getDomain(entry.title)
+            data.note = tld.getDomain(entry.title);
           } else {
             data.note = data.title;
           }
         }
 
         chrome.runtime.sendMessage({ type: 'encryptFullEntry', content: data }, response => {
-          var importStatus = this.state.importStatus
+          var importStatus = this.state.importStatus;
           if (importStatus.length === 0) return;
           data.password = response.content.password;
           data.safe_note = response.content.safe_note;
@@ -253,7 +256,7 @@ var React = require('react'),
     isUrl(url) {
       return validator.isURL(url.trim());
     },
-    
+
     removeProtocolPrefix(url) {
       return url.indexOf('://') > -1
         ? url.substring(url.indexOf('://') + 3, url.length).split('/')[0]
@@ -358,24 +361,24 @@ var React = require('react'),
     },
 
     onFocusValue(event) {
-        event.target.parentNode.classList.add('active');
+      event.target.parentNode.classList.add('active');
     },
 
     onBlurValue(event) {
-        event.target.parentNode.classList.remove('active');
+      event.target.parentNode.classList.remove('active');
     },
 
     onChangeValue(event) {
-        let id = event.target.getAttribute('id').split('-');
-        let row = parseInt(id[1]);
-        let col = parseInt(id[2]);
+      let id = event.target.getAttribute('id').split('-');
+      let row = parseInt(id[1]);
+      let col = parseInt(id[2]);
 
-        var storage = this.state.storage;
-            storage.data[row][col] = event.target.value;
+      var storage = this.state.storage;
+      storage.data[row][col] = event.target.value;
 
-        this.setState({
-            storage: storage
-        });
+      this.setState({
+        storage: storage
+      });
     },
 
     browseFile(event) {
@@ -491,10 +494,20 @@ var React = require('react'),
             let id = 'input-' + n + '-' + i;
 
             i++;
-            return <td key={key}>
+            return (
+              <td key={key}>
                 {val}
-                <input type="text" className="edit" id={id} value={col} onChange={this.onChangeValue} onFocus={this.onFocusValue} onBlur={this.onBlurValue} />
-            </td>;
+                <input
+                  type="text"
+                  className="edit"
+                  id={id}
+                  value={col}
+                  onChange={this.onChangeValue}
+                  onFocus={this.onFocusValue}
+                  onBlur={this.onBlurValue}
+                />
+              </td>
+            );
           });
           let statusKey = 'status' + i;
           cols.push(
@@ -545,9 +558,9 @@ var React = require('react'),
           >
             <Modal.Header>
               {!importInProgress && (
-              <button className="close" onClick={this.closeImportModal}>
-                <img src="./images/cancel.svg" />
-              </button>
+                <button className="close" onClick={this.closeImportModal}>
+                  <img src="./images/cancel.svg" />
+                </button>
               )}
               <Modal.Title id="contained-modal-title-sm">Import keys</Modal.Title>
             </Modal.Header>
@@ -584,15 +597,16 @@ var React = require('react'),
                 </form>
               )}
               {this.state.storage && <p className={'help'}>Sort your .CSV columns by type.</p>}
-              {showClearFirstRow && !importInProgress && (
-              <label
-                className={'checkbox' + (firstRowHeader ? ' active' : '')}
-                onClick={this.setFirstRow}
-              >
-                <i>{firstRowHeader && <img src="./images/checkbox_checked.svg" />}</i>
-                Clear first row in the table.
-              </label>
-              )}
+              {showClearFirstRow &&
+                !importInProgress && (
+                  <label
+                    className={'checkbox' + (firstRowHeader ? ' active' : '')}
+                    onClick={this.setFirstRow}
+                  >
+                    <i>{firstRowHeader && <img src="./images/checkbox_checked.svg" />}</i>
+                    Clear first row in the table.
+                  </label>
+                )}
               {this.state.storage && (
                 <div className={'storage_content'}>
                   <Table>

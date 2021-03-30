@@ -288,7 +288,10 @@ var Promise = require('es6-promise').Promise,
         break;
 
       case 'encryptFullEntry':
-        chrome.runtime.sendMessage({ type: 'fileSaving', key_value: request.content.key_value || true });
+        chrome.runtime.sendMessage({
+          type: 'fileSaving',
+          key_value: request.content.key_value || true
+        });
         trezorManager.encryptFullEntry(request.content, sendResponse);
         break;
 

@@ -11,7 +11,6 @@ var React = require('react'),
   DropdownButton = require('react-bootstrap').DropdownButton,
   MenuItem = require('react-bootstrap').MenuItem,
   ImportSelect = React.createClass({
-
     componentWillReceiveProps(nextProps) {
       this.setState({
         disabled: nextProps.disabled

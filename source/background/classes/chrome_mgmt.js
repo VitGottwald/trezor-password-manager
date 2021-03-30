@@ -191,7 +191,11 @@ class ChromeMgmt {
           matches.push(item === host[k]);
         });
 
-        if (matches.every(function(v) { return v === true })) {
+        if (
+          matches.every(function(v) {
+            return v === true;
+          })
+        ) {
           entry = obj;
         }
       });

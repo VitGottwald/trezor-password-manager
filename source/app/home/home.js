@@ -40,7 +40,7 @@ var React = require('react'),
       window.addEventListener('online', this.updateOnlineStatus);
       window.addEventListener('offline', this.updateOnlineStatus);
       // RUN INIT!
-        this.sendMessage('initPlease');
+      this.sendMessage('initPlease');
     },
 
     componentWillUnmount() {
@@ -53,18 +53,21 @@ var React = require('react'),
       if (this.state.transportType === 'ParallelTransport' && this.state.isOnline) {
         var button = this.webusbButton.getDOMNode();
         if (button && button.getElementsByTagName('iframe').length < 1) {
-          chrome.runtime.sendMessage({
-            type: 'renderWebUSBButton'
-          }, (innerHTML) => {
-            button.innerHTML = innerHTML;
-            
-            let iframe = button.getElementsByTagName('iframe')[0];
-            let connectUrl = iframe.getAttribute('src');
+          chrome.runtime.sendMessage(
+            {
+              type: 'renderWebUSBButton'
+            },
+            innerHTML => {
+              button.innerHTML = innerHTML;
 
-            iframe.onload = () => {
-              iframe.contentWindow.postMessage({}, connectUrl);
+              let iframe = button.getElementsByTagName('iframe')[0];
+              let connectUrl = iframe.getAttribute('src');
+
+              iframe.onload = () => {
+                iframe.contentWindow.postMessage({}, connectUrl);
+              };
             }
-          });
+          );
         }
       }
     },
@@ -122,7 +125,11 @@ var React = require('react'),
           break;
 
         case 'cancelPinDialog':
-          if (this.state.dialog === 'pin_dialog' || (this.state.dialog === 'loading_dialog' && this.state.activeDevice.version !== "unknown")) {
+          if (
+            this.state.dialog === 'pin_dialog' ||
+            (this.state.dialog === 'loading_dialog' &&
+              this.state.activeDevice.version !== 'unknown')
+          ) {
             this.setState({
               dialog: 'accept_user',
               storageReady: true
@@ -147,7 +154,7 @@ var React = require('react'),
           this.setState({
             dialog: 'button_dialog',
             passphrase: false,
-            passphraseOnDevice: false,
+            passphraseOnDevice: false
           });
           break;
 
@@ -185,11 +192,11 @@ var React = require('react'),
       }
       return true;
     },
-    
+
     updateOnlineStatus() {
       let status = navigator.onLine;
       this.setState({
-          isOnline: status
+        isOnline: status
       });
     },
 
@@ -200,7 +207,7 @@ var React = require('react'),
     },
 
     activateDevice(d) {
-      if (this.state.devices[d].path === "unreadable-device") {
+      if (this.state.devices[d].path === 'unreadable-device') {
         // install bridge
         this.sendMessage('errorMsg', { code: 'T_NO_TRANSPORT' });
       } else if (!this.state.devices[d].accquired) {
@@ -208,16 +215,19 @@ var React = require('react'),
           dialog: 'loading_dialog',
           activeDevice: this.state.devices[d]
         });
-        chrome.runtime.sendMessage({
+        chrome.runtime.sendMessage(
+          {
             type: 'getDeviceState',
             content: this.state.devices[d]
-        }, (a) => {
-          if (a.success) {
-            this.sendMessage('activateTrezor', this.state.devices[d].path);
-          } else {
-            this.sendMessage('hidePinModal');
+          },
+          a => {
+            if (a.success) {
+              this.sendMessage('activateTrezor', this.state.devices[d].path);
+            } else {
+              this.sendMessage('hidePinModal');
+            }
           }
-        });
+        );
       } else {
         // activate device
         this.setState({
@@ -260,7 +270,7 @@ var React = require('react'),
       var showInstallBridge = false;
       var showUnacquired = false;
       var device_list = Object.keys(this.state.devices).map((key, i = 0) => {
-        if (this.state.devices[key].path === "unreadable-device") {
+        if (this.state.devices[key].path === 'unreadable-device') {
           showInstallBridge = true;
         }
         if (!this.state.devices[key].accquired) {
@@ -357,31 +367,56 @@ var React = require('react'),
                   !this.state.devices.length && (
                     <span className="connect_trezor">
                       {this.state.isOnline ? (
-                          <span>
-                              <img src="dist/app-images/connect-trezor.svg" /> Connect TREZOR to continue
-                          </span>) : (<span>
-                              <span className="connect_trezor">You are offline, please connect to internet.</span>
-                          </span>)}
+                        <span>
+                          <img src="dist/app-images/connect-trezor.svg" /> Connect TREZOR to
+                          continue
+                        </span>
+                      ) : (
+                        <span>
+                          <span className="connect_trezor">
+                            You are offline, please connect to internet.
+                          </span>
+                        </span>
+                      )}
                     </span>
                   )}
                 {this.state.transportType === 'ParallelTransport' && (
                   <div>
-                      {this.state.isOnline ? (
-                          <div>
-                            <span className="connect_trezor inline">
-                      <img src="dist/app-images/connect-trezor.svg" /> Connect TREZOR
-                      </span>{' '} and {' '}
-                          <button className="webusb no-style half-transparent trezor-webusb-button"
-                              ref={f => {this.webusbButton = f;}}>Check for devices</button>
-                          </div>
-                      ) : (<span><span className="connect_trezor">You are offline, please connect to internet.</span></span>)}
+                    {this.state.isOnline ? (
+                      <div>
+                        <span className="connect_trezor inline">
+                          <img src="dist/app-images/connect-trezor.svg" /> Connect TREZOR
+                        </span>{' '}
+                        and{' '}
+                        <button
+                          className="webusb no-style half-transparent trezor-webusb-button"
+                          ref={f => {
+                            this.webusbButton = f;
+                          }}
+                        >
+                          Check for devices
+                        </button>
+                      </div>
+                    ) : (
+                      <span>
+                        <span className="connect_trezor">
+                          You are offline, please connect to internet.
+                        </span>
+                      </span>
+                    )}
                   </div>
                 )}
                 <div className={this.state.devices.length ? '' : 'hidden'}>
                   <span>Choose from device</span>
-                  {showInstallBridge && <p style={{marginTop: "15px"}}>TREZOR bridge not installed.</p>}
+                  {showInstallBridge && (
+                    <p style={{ marginTop: '15px' }}>TREZOR bridge not installed.</p>
+                  )}
                   <ul className="dev-list">{device_list}</ul>
-                  {showUnacquired && <p style={{marginTop: "15px"}}>Your device is being used in another window.</p>}
+                  {showUnacquired && (
+                    <p style={{ marginTop: '15px' }}>
+                      Your device is being used in another window.
+                    </p>
+                  )}
                 </div>
                 <div className={this.state.devices.length ? 'hidden' : 'desc'}>
                   <div className="desc">
@@ -411,7 +446,11 @@ var React = require('react'),
             >
               <h1>
                 <span className="icon icon-device" />
-                <div className={!this.state.passphrase && !this.state.passphraseOnDevice ? 'desc' : 'hidden'}>
+                <div
+                  className={
+                    !this.state.passphrase && !this.state.passphraseOnDevice ? 'desc' : 'hidden'
+                  }
+                >
                   Follow instructions on your <br />{' '}
                   <b className="smallcaps">{this.state.activeDevice.label}</b> device.
                 </div>
@@ -420,7 +459,8 @@ var React = require('react'),
                   <br /> <small>TREZOR Password Manager does not support passphrase yet.</small>
                 </div>
                 <div className={this.state.passphraseOnDevice ? 'desc' : 'hidden'}>
-                  Enter empty passphrase on <b className="smallcaps">{this.state.activeDevice.label}</b> device.
+                  Enter empty passphrase on{' '}
+                  <b className="smallcaps">{this.state.activeDevice.label}</b> device.
                   <br /> <small>TREZOR Password Manager does not support passphrase yet.</small>
                 </div>
               </h1>

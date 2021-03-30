@@ -51,11 +51,11 @@ class TrezorMgmt {
     this.trezorConnect.init({
       manifest: {
         email: 'info@trezor.io',
-        appUrl: 'trezor-password-manager',
+        appUrl: 'trezor-password-manager'
       },
       debug: true,
       webusb: true,
-      popup: false,
+      popup: false
       // connectSrc: URL_CONNECT
     });
     this.bgStore.emit('checkReopen');
@@ -94,17 +94,19 @@ class TrezorMgmt {
   }
 
   getDeviceState(d, callback) {
-    this.trezorConnect.getDeviceState({
-      device: d,
-      useEmptyPassphrase: true
-    }).then(state => {
-      if (typeof callback === "function") callback(state);
-    });
+    this.trezorConnect
+      .getDeviceState({
+        device: d,
+        useEmptyPassphrase: true
+      })
+      .then(state => {
+        if (typeof callback === 'function') callback(state);
+      });
   }
 
   getFeatures() {
     this.trezorConnect.getFeatures({
-      device: { path:  this._activeDevice.path},
+      device: { path: this._activeDevice.path },
       useEmptyPassphrase: true,
       override: true
     });
@@ -112,8 +114,8 @@ class TrezorMgmt {
 
   renderWebUSBButton(callback) {
     var button = document.createElement('button');
-        button.setAttribute('class', 'trezor-webusb-button');
-        button.append('Check for devices');
+    button.setAttribute('class', 'trezor-webusb-button');
+    button.append('Check for devices');
 
     document.body.append(button);
     this.trezorConnect.renderWebUSBButton();

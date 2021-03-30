@@ -7,13 +7,14 @@
 
 'use strict';
 var crypto = require('crypto'),
-    state = crypto.randomBytes(40).toString('hex');
-const fullReceiverPath = 'chrome-extension://' + chrome.runtime.id + '/html/chrome_oauth_receiver.html',
-    APIKEY = 's340kh3l0vla1nv',
-    STORAGE = 'tpmDropboxToken',
-    logoutUrl = 'https://www.dropbox.com/logout',
-    ADDRS_PATH = '/',
-    Dropbox = require('dropbox');
+  state = crypto.randomBytes(40).toString('hex');
+const fullReceiverPath =
+    'chrome-extension://' + chrome.runtime.id + '/html/chrome_oauth_receiver.html',
+  APIKEY = 's340kh3l0vla1nv',
+  STORAGE = 'tpmDropboxToken',
+  logoutUrl = 'https://www.dropbox.com/logout',
+  ADDRS_PATH = '/',
+  Dropbox = require('dropbox');
 
 let dbRetryFileLoad = 3;
 
@@ -38,39 +39,40 @@ class DropboxMgmt {
     }
   }
 
-    connect() {
-        if (!this.isAuth()) {
-            state = crypto.randomBytes(40).toString('hex');
-            this.authUrl = this.dbc.getAuthenticationUrl(fullReceiverPath, state);
-            window.open(this.authUrl);
-        } else {
-            this.dbc.setAccessToken(this.authToken);
-            this.getDropboxUsername();
-        }
+  connect() {
+    if (!this.isAuth()) {
+      state = crypto.randomBytes(40).toString('hex');
+      this.authUrl = this.dbc.getAuthenticationUrl(fullReceiverPath, state);
+      window.open(this.authUrl);
+    } else {
+      this.dbc.setAccessToken(this.authToken);
+      this.getDropboxUsername();
     }
+  }
 
-    loadMetadataToken() {
-        return window.localStorage[STORAGE] ? window.localStorage[STORAGE] : '';
-    }
+  loadMetadataToken() {
+    return window.localStorage[STORAGE] ? window.localStorage[STORAGE] : '';
+  }
 
-    saveToken(val) {
-        let retState = this.parseQuery(val).state;
-        if (retState === state) {
-            this.authToken = this.parseQuery(val).access_token;
-            window.localStorage[STORAGE] = this.authToken;
-            this.connect();
-        }
+  saveToken(val) {
+    let retState = this.parseQuery(val).state;
+    if (retState === state) {
+      this.authToken = this.parseQuery(val).access_token;
+      window.localStorage[STORAGE] = this.authToken;
+      this.connect();
     }
+  }
 
-    getDropboxUsername() {
-        this.dbc.usersGetCurrentAccount()
-            .then((response) => {
-                this.bgStore.setUsername(response.name.display_name, 'DROPBOX');
-            })
-            .catch((error) => {
-                console.error(error);
-        });
-    }
+  getDropboxUsername() {
+    this.dbc
+      .usersGetCurrentAccount()
+      .then(response => {
+        this.bgStore.setUsername(response.name.display_name, 'DROPBOX');
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }
 
   loadFile() {
     if (!this.bgStore.fileName) {
@@ -120,7 +122,7 @@ class DropboxMgmt {
     var blob = new Blob([data.buffer], { type: 'text/plain;charset=UTF-8' });
     this.dbc
       .filesUpload({ path: ADDRS_PATH + this.bgStore.fileName, contents: blob, mode: 'overwrite' })
-      .then((res) => {
+      .then(res => {
         let myReader = new FileReader();
         myReader.addEventListener('loadend', e => {
           this.bgStore.setData(e.srcElement.result);
