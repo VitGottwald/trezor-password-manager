@@ -7,6 +7,9 @@
 
 'use strict';
 
+const DEBUG = false;
+const trace = DEBUG ? console.log : Function.prototype;
+
 require('babel-polyfill');
 require('trezor-connect');
 
@@ -220,7 +223,13 @@ var Promise = require('es6-promise').Promise,
     }
     userLoggedOut();
   },
-  chromeMessaging = (request, sender, sendResponse) => {
+  chromeMessaging = (request, _sender, sendResponse) => {
+    trace(
+      '%c bckg ▶',
+      'color: red',
+      request.type,
+      request.type === 'errorMsg' ? request.content.code : ''
+    );
     switch (request.type) {
       case 'initPlease':
         init();

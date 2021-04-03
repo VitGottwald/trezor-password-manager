@@ -7,6 +7,14 @@
 
 'use strict';
 
+const DEBUG = false;
+const trace = DEBUG ? console.log : Function.prototype;
+
+const sendMessage = (msgType, msgContent, callback) => {
+  trace('%c home ◀', 'color: green', msgType);
+  chrome.runtime.sendMessage({ type: msgType, content: msgContent }, callback);
+};
+
 var React = require('react'),
   Router = require('react-router'),
   Store = require('../global_components/data_store'),
@@ -16,6 +24,10 @@ var React = require('react'),
   Home = React.createClass({
     mixins: [Router.Navigation],
 
+    setMyState(state, ...rest) {
+      trace('%c home ▼', 'color: yellow', JSON.stringify(state));
+      this.setState(state, ...rest);
+    },
     getInitialState() {
       return {
         trezorReady: false,
@@ -40,7 +52,7 @@ var React = require('react'),
       window.addEventListener('online', this.updateOnlineStatus);
       window.addEventListener('offline', this.updateOnlineStatus);
       // RUN INIT!
-      this.sendMessage('initPlease');
+      sendMessage('initPlease');
     },
 
     componentWillUnmount() {
@@ -53,59 +65,59 @@ var React = require('react'),
       if (this.state.transportType === 'ParallelTransport' && this.state.isOnline) {
         var button = this.webusbButton.getDOMNode();
         if (button && button.getElementsByTagName('iframe').length < 1) {
-          chrome.runtime.sendMessage(
-            {
-              type: 'renderWebUSBButton'
-            },
-            innerHTML => {
-              button.innerHTML = innerHTML;
+          sendMessage('renderWebUSBButton', undefined, response => {
+            button.innerHTML = response;
 
-              let iframe = button.getElementsByTagName('iframe')[0];
-              let connectUrl = iframe.getAttribute('src');
+            let iframe = button.getElementsByTagName('iframe')[0];
+            let connectUrl = iframe.getAttribute('src');
 
-              iframe.onload = () => {
-                iframe.contentWindow.postMessage({}, connectUrl);
-              };
-            }
-          );
+            iframe.onload = () => {
+              iframe.contentWindow.postMessage({}, connectUrl);
+            };
+          });
         }
       }
     },
-
-    chromeMsgHandler(request, sender, sendResponse) {
+    chromeMsgHandler(request, _sender, sendResponse) {
+      trace(
+        '%c home ▶',
+        'color: red',
+        request.type,
+        request.type === 'errorMsg' ? request.content.code : ''
+      );
       switch (request.type) {
         // STORAGE PHASE
 
         case 'initialized':
-          this.setState({
+          this.setMyState({
             dialog: 'connect_storage',
             storageReady: true
           });
           break;
 
         case 'setUsername':
-          this.setState({
+          this.setMyState({
             dialog: 'accept_user',
             username: request.content.username,
             storageType: request.content.storageType
           });
-          this.sendMessage('initTrezorPhase');
+          sendMessage('initTrezorPhase');
           break;
 
         case 'updateDevices':
-          this.setState({
+          this.setMyState({
             devices: request.content.devices
           });
           break;
 
         case 'trezorTransport':
-          this.setState({
+          this.setMyState({
             transportType: request.content.transport
           });
           break;
 
         case 'disconnected':
-          this.setState({
+          this.setMyState({
             dialog: 'connect_storage',
             username: '',
             storageType: '',
@@ -116,7 +128,7 @@ var React = require('react'),
         // TREZOR PHASE
 
         case 'showPinDialog':
-          this.setState({
+          this.setMyState({
             dialog: 'pin_dialog'
           });
           chrome.tabs.getCurrent(tab => {
@@ -130,7 +142,7 @@ var React = require('react'),
             (this.state.dialog === 'loading_dialog' &&
               this.state.activeDevice.version !== 'unknown')
           ) {
-            this.setState({
+            this.setMyState({
               dialog: 'accept_user',
               storageReady: true
             });
@@ -138,20 +150,20 @@ var React = require('react'),
           break;
 
         case 'hidePinModal':
-          this.setState({
+          this.setMyState({
             dialog: 'loading_dialog'
           });
           break;
 
         case 'loading':
-          this.setState({
+          this.setMyState({
             dialog: 'loading_dialog',
             loadingText: request.content
           });
           break;
 
         case 'showButtonDialog':
-          this.setState({
+          this.setMyState({
             dialog: 'button_dialog',
             passphrase: false,
             passphraseOnDevice: false
@@ -159,7 +171,7 @@ var React = require('react'),
           break;
 
         case 'trezorDisconnected':
-          this.setState({
+          this.setMyState({
             trezorReady: false,
             dialog: 'connect_trezor'
           });
@@ -167,7 +179,7 @@ var React = require('react'),
 
         case 'trezorPassphrase':
           if (this.state.activeDevice.version === 2) {
-            this.setState({
+            this.setMyState({
               passphrase: true
             });
           }
@@ -175,7 +187,7 @@ var React = require('react'),
 
         case 'passphraseOnDevice':
           if (this.state.activeDevice.version === 2) {
-            this.setState({
+            this.setMyState({
               passphraseOnDevice: true
             });
           }
@@ -195,69 +207,65 @@ var React = require('react'),
 
     updateOnlineStatus() {
       let status = navigator.onLine;
-      this.setState({
+      trace('%c home ▶', 'color: blue', `online - ${status}`);
+      this.setMyState({
         isOnline: status
       });
     },
 
     toggleDetails() {
-      this.setState({
+      trace('%c home ▶', 'color: blue', `click on user details`);
+      this.setMyState({
         userDetails: !this.state.userDetails
       });
     },
 
     activateDevice(d) {
+      trace('%c home ▶', 'color: blue', `click on device`);
       if (this.state.devices[d].path === 'unreadable-device') {
         // install bridge
-        this.sendMessage('errorMsg', { code: 'T_NO_TRANSPORT' });
+        sendMessage('errorMsg', { code: 'T_NO_TRANSPORT' });
       } else if (!this.state.devices[d].accquired) {
-        this.setState({
+        this.setMyState({
           dialog: 'loading_dialog',
           activeDevice: this.state.devices[d]
         });
-        chrome.runtime.sendMessage(
-          {
-            type: 'getDeviceState',
-            content: this.state.devices[d]
-          },
-          a => {
-            if (a.success) {
-              this.sendMessage('activateTrezor', this.state.devices[d].path);
-            } else {
-              this.sendMessage('hidePinModal');
-            }
+        sendMessage('getDeviceState', this.state.devices[d], response => {
+          if (response.success) {
+            sendMessage('activateTrezor', this.state.devices[d].path);
+          } else {
+            sendMessage('hidePinModal');
           }
-        );
+        });
       } else {
         // activate device
-        this.setState({
+        this.setMyState({
           dialog: 'loading_dialog',
           activeDevice: this.state.devices[d]
         });
-        this.sendMessage('activateTrezor', this.state.devices[d].path);
+        sendMessage('activateTrezor', this.state.devices[d].path);
       }
     },
 
-    sendMessage(msgType, msgContent) {
-      chrome.runtime.sendMessage({ type: msgType, content: msgContent });
-    },
-
     connectDropbox() {
-      this.setState({
+      trace('%c home ▶', 'color: blue', `click on dropbox`);
+      this.setMyState({
         dialog: 'preloading'
       });
-      this.sendMessage('connectDropbox');
+      sendMessage('connectDropbox');
     },
 
     connectDrive() {
-      this.setState({
+      trace('%c home ▶', 'color: blue', `click on google drive`);
+      this.setMyState({
         dialog: 'preloading'
       });
-      this.sendMessage('connectDrive');
+      sendMessage('connectDrive');
     },
 
     disconnect() {
-      this.sendMessage('disconnect');
+      trace('%c home ▶', 'color: blue', `click on logout`);
+      sendMessage('disconnect');
     },
 
     checkStates() {
