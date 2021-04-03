@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "description": "",
   "scripts": {
-    "start": "gulp production"
+    "start": "gulp production",
+    "lint": "prettier -l 'source/**/*.js'"
   },
   "author": "Peter Jensen",
   "license": "SEE LICENSE IN LICENSE.md",

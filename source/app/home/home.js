@@ -62,7 +62,7 @@ var React = require('react'),
     },
 
     componentDidUpdate() {
-      if (this.state.transportType === 'ParallelTransport' && this.state.isOnline) {
+      if (this.state.transportType === 'WebUsbPlugin' && this.state.isOnline) {
         var button = this.webusbButton.getDOMNode();
         if (button && button.getElementsByTagName('iframe').length < 1) {
           sendMessage('renderWebUSBButton', undefined, response => {
@@ -382,7 +382,7 @@ var React = require('react'),
                       )}
                     </span>
                   )}
-                {this.state.transportType === 'ParallelTransport' && (
+                {this.state.transportType === 'WebUsbPlugin' && (
                   <div>
                     {this.state.isOnline ? (
                       <div>
