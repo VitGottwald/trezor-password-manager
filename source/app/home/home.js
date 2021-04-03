@@ -268,12 +268,6 @@ var React = require('react'),
       sendMessage('disconnect');
     },
 
-    checkStates() {
-      if (this.state.trezorReady && this.state.storageReady) {
-        this.transitionTo('dashboard');
-      }
-    },
-
     render() {
       var showInstallBridge = false;
       var showUnacquired = false;
